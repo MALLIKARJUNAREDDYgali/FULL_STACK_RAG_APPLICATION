@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+python-multipart
+pymongo
+pydantic
+requests
+numpy
+pinecone
+pypdf
+python-dotenv

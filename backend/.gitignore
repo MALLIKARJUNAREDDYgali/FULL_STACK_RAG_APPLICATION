@@ -1,0 +1,13 @@
+# Environment / Secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Database
+chroma_db/
+
+# Misc
+*.log
