@@ -1,10 +1,11 @@
-from pymongo import MongoClient
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
 from app.config import MONGO_URI
 
 try:
-    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=3000)
-    # Test the connection
-    client.server_info()
+    client = MongoClient(MONGO_URI, server_api=ServerApi('1'), serverSelectionTimeoutMS=10000)
+    # Test the connection with a ping
+    client.admin.command('ping')
     db = client["rag_chatbot"]
     chat_collection = db["chat_sessions"]
     users_collection = db["users"]
@@ -13,7 +14,7 @@ try:
     users_collection.create_index("email", unique=True)
     # Index for fast user chat lookups
     user_chats_collection.create_index("user_id")
-    print("[OK] Connected to MongoDB successfully")
+    print("[OK] Connected to MongoDB Atlas successfully")
 except Exception as e:
     print(f"[WARN] MongoDB not available ({e}). Chat history will not be saved.")
     # Create a dummy collection that silently ignores all operations

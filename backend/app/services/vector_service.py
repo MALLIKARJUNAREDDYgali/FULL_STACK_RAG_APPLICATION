@@ -1,45 +1,57 @@
-import chromadb
-import os
+from pinecone import Pinecone
+from app.config import PINECONE_API_KEY
 
-# Create local persistent DB using the modern PersistentClient API
-_chroma_path = os.path.join(os.path.dirname(__file__), "..", "..", "chroma_db")
-client = chromadb.PersistentClient(path=os.path.abspath(_chroma_path))
+# Initialize Pinecone client
+pc = Pinecone(api_key=PINECONE_API_KEY)
 
-# Collection name
-collection = client.get_or_create_collection(name="rag_collection")
+# Connect to the cloud index
+index = pc.Index("rag-vectors")
+
+print("[OK] Connected to Pinecone cloud successfully")
 
 
 def upsert_vectors(vectors, namespace):
-    ids = []
-    documents = []
-    embeddings = []
-    metadatas = []
-
+    """Upsert document vectors into Pinecone cloud index."""
+    pinecone_vectors = []
     for v in vectors:
-        ids.append(v["id"])
-        embeddings.append(v["values"])
-        documents.append(v["metadata"]["text"])
-        metadatas.append({"namespace": namespace})
+        pinecone_vectors.append({
+            "id": v["id"],
+            "values": v["values"],
+            "metadata": {
+                "text": v["metadata"]["text"],
+                "namespace": namespace,
+            }
+        })
 
-    # Use upsert to avoid duplicate ID errors
-    collection.upsert(
-        ids=ids,
-        embeddings=embeddings,
-        documents=documents,
-        metadatas=metadatas
-    )
+    # Upsert in batches of 100
+    batch_size = 100
+    for i in range(0, len(pinecone_vectors), batch_size):
+        batch = pinecone_vectors[i:i + batch_size]
+        index.upsert(vectors=batch, namespace=namespace)
 
 
 def query_vectors(embedding, namespace):
-    # Check if the collection has any documents before querying
-    if collection.count() == 0:
-        return {"documents": [[]], "metadatas": [[]], "distances": [[]]}
+    """Query vectors from Pinecone cloud by namespace."""
+    try:
+        results = index.query(
+            vector=embedding,
+            top_k=5,
+            namespace=namespace,
+            include_metadata=True,
+        )
 
-    # Filter by namespace (session_id) so we only get this session's documents
-    results = collection.query(
-        query_embeddings=[embedding],
-        n_results=5,
-        where={"namespace": namespace}
-    )
+        # Convert Pinecone response to match the format used by the chat route
+        documents = []
+        metadatas = []
+        for match in results.get("matches", []):
+            metadata = match.get("metadata", {})
+            documents.append(metadata.get("text", ""))
+            metadatas.append(metadata)
 
-    return results
+        return {
+            "documents": [documents],
+            "metadatas": [metadatas],
+        }
+    except Exception as e:
+        print(f"[WARN] Pinecone query error: {e}")
+        return {"documents": [[]], "metadatas": [[]]}
