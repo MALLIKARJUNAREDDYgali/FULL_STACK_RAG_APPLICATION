@@ -1,7 +1,7 @@
 # 🤖 RAG AI — Full Stack RAG Chatbot
 
 A full-stack Retrieval-Augmented Generation (RAG) chatbot that lets you upload PDF documents and have intelligent conversations about them.
-
+APP LINK: https://full-stack-rag-application.vercel.app/
 ![Tech Stack](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
 ![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
