@@ -1,7 +1,9 @@
 import axios from "axios";
 
+const API_BASE = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
+
 const API = axios.create({
-  baseURL: "http://127.0.0.1:8000",
+  baseURL: API_BASE,
 });
 
 export const uploadPDF = (file, sessionId) => {
@@ -14,7 +16,7 @@ export const uploadPDF = (file, sessionId) => {
  * Streaming chat — calls onToken for each word/token, onDone when complete.
  */
 export const sendMessageStream = async (sessionId, message, onToken, onDone) => {
-  const response = await fetch("http://127.0.0.1:8000/chat", {
+  const response = await fetch(`${API_BASE}/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ session_id: sessionId, message }),
